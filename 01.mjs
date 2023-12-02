@@ -1,5 +1,17 @@
 import fs from "fs";
 
+const spelledNumbers = [
+	{ value: 1, word: "one" },
+	{ value: 2, word: "two" },
+	{ value: 3, word: "three" },
+	{ value: 4, word: "four" },
+	{ value: 5, word: "five" },
+	{ value: 6, word: "six" },
+	{ value: 7, word: "seven" },
+	{ value: 8, word: "eight" },
+	{ value: 9, word: "nine" },
+];
+
 fs.readFile("./input_01", "utf8", (err, fileContent) => {
 	if (err) {
 		console.error(err);
@@ -16,11 +28,29 @@ fs.readFile("./input_01", "utf8", (err, fileContent) => {
 				i < cur.length &&
 				(firstDigit === undefined || lastDigit === undefined)
 			) {
-				if (firstDigit === undefined && !isNaN(cur.at(i))) {
-					firstDigit = Number(cur.at(i));
+				if (firstDigit === undefined) {
+					if (!isNaN(cur.at(i))) {
+						firstDigit = Number(cur.at(i));
+					} else {
+						const firstSpelledNumber = findStartingSpelledNumber(
+							cur.substring(i)
+						);
+						if (firstSpelledNumber) {
+							firstDigit = firstSpelledNumber.value;
+						}
+					}
 				}
-				if (lastDigit === undefined && !isNaN(cur.at(cur.length - 1 - i))) {
-					lastDigit = Number(cur.at(cur.length - 1 - i));
+				if (lastDigit === undefined) {
+					if (!isNaN(cur.at(cur.length - 1 - i))) {
+						lastDigit = Number(cur.at(cur.length - 1 - i));
+					} else {
+						const lastSpelledNumber = findStartingSpelledNumber(
+							cur.substring(cur.length - 1 - i)
+						);
+						if (lastSpelledNumber) {
+							lastDigit = lastSpelledNumber.value;
+						}
+					}
 				}
 				i++;
 			}
@@ -33,3 +63,7 @@ fs.readFile("./input_01", "utf8", (err, fileContent) => {
 
 	console.log(sumOfFirstAndLastDigits);
 });
+
+function findStartingSpelledNumber(word) {
+	return spelledNumbers.find((spelled) => word.startsWith(spelled.word));
+}
