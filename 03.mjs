@@ -3,7 +3,7 @@ import { readFile } from "./utils.mjs";
 const SEPARATOR = ".";
 const GEAR_SYMBOL = "*";
 
-const engine = readFile("./input_03_ex_1");
+const engine = readFile("./input_03");
 
 const engineParts = getEngineParts(engine);
 
@@ -11,6 +11,7 @@ console.log(engineParts);
 
 function getEngineParts(lines) {
 	let gears = {};
+	let gearParts = {};
 	let enginePartNumberSum = 0;
 	lines.forEach((line, lineIndex) => {
 		let i = 0;
@@ -24,7 +25,7 @@ function getEngineParts(lines) {
 					
 					const adjacentToGearSymbols = getIsAdjacentToGear(lines, lineIndex, i, i + numberLength - 1);
 					if (adjacentToGearSymbols.hasAdjacentGear) {
-						gears = mergeFlakeIndices(gears, adjacentToGearSymbols.adjacentFlakeIndices);
+						gears = mergeFlakeIndices(gears, adjacentToGearSymbols.adjacentFlakeIndices, foundNumber);
 					}
 				}
 				i += numberLength;
@@ -34,8 +35,14 @@ function getEngineParts(lines) {
 		}
 	});
 	
-	const exactGearsCount = Object.values(gears).filter((gearCount) => gearCount === 2).length;
-	return {enginePartNumberSum, exactGearsCount};
+	const gearRatioSum = Object.values(gears).reduce((acc, cur) => {
+		if (cur.length === 2) {
+			return acc + Number(cur[0]) * Number(cur[1]);
+		} else {
+			return acc;
+		}
+	}, 0);
+	return {enginePartNumberSum, gearRatioSum};
 }
 
 function getFirstNumberAsString(word) {
@@ -73,20 +80,17 @@ function getIsAdjacentToGear(lines, lineIndex, startIndex, endIndex) {
 	let adjacentFlakeIndices = {};
 	const symbolBefore = startIndex === 0 ? {} : getSymbols(lines[lineIndex].at(startIndex - 1), GEAR_SYMBOL);
 	if (symbolBefore.hasSymbol) {
-		const gearCount = adjacentFlakeIndices[getGearId(lineIndex, startIndex - 1)];
-		adjacentFlakeIndices[getGearId(lineIndex, startIndex - 1)] = gearCount ? gearCount + 1 : 1;
+		adjacentFlakeIndices[getGearId(lineIndex, startIndex - 1)] = [];
 	}
 	const symbolAfter = endIndex >= lines[lineIndex].length ? {} : getSymbols(lines[lineIndex].at(endIndex + 1), GEAR_SYMBOL);
 	if (symbolAfter.hasSymbol) {
-		const gearCount = adjacentFlakeIndices[getGearId(lineIndex, endIndex + 1)];
-		adjacentFlakeIndices[getGearId(lineIndex, endIndex + 1)] = gearCount ? gearCount + 1 : 1;
+		adjacentFlakeIndices[getGearId(lineIndex, endIndex + 1)] = [];
 	}
 	const symbolBeforeLine = lineIndex === 0 ? false : getSymbols(lines[lineIndex - 1].slice((startIndex === 0 ? startIndex : startIndex - 1), (endIndex >= (lines[lineIndex - 1].length - 1) ? (endIndex + 1) : endIndex + 2)), GEAR_SYMBOL);
 	if (symbolBeforeLine.hasSymbol) {
 		symbolBeforeLine.symbolIndices.forEach(
 			(symbolIndex) => {
-				const gearCount = adjacentFlakeIndices[getGearId(lineIndex - 1, startIndex === 0 ? startIndex + symbolIndex : startIndex - 1 + symbolIndex)];
-				adjacentFlakeIndices[getGearId(lineIndex - 1, startIndex === 0 ? startIndex + symbolIndex : startIndex - 1 + symbolIndex)] = gearCount ? gearCount + 1 : 1;
+				adjacentFlakeIndices[getGearId(lineIndex - 1, startIndex === 0 ? startIndex + symbolIndex : startIndex - 1 + symbolIndex)] = [];
 			}
 		);
 	}
@@ -94,8 +98,7 @@ function getIsAdjacentToGear(lines, lineIndex, startIndex, endIndex) {
 	if (symbolAfterLine.hasSymbol) {
 		symbolAfterLine.symbolIndices.forEach(
 			(symbolIndex) => {
-				const gearCount = adjacentFlakeIndices[getGearId(lineIndex + 1, startIndex === 0 ? startIndex + symbolIndex : startIndex - 1 + symbolIndex)];
-				adjacentFlakeIndices[getGearId(lineIndex + 1, startIndex === 0 ? startIndex + symbolIndex : startIndex - 1 + symbolIndex)] = gearCount ? gearCount + 1 : 1;
+				adjacentFlakeIndices[getGearId(lineIndex + 1, startIndex === 0 ? startIndex + symbolIndex : startIndex - 1 + symbolIndex)] = [];
 			}
 		);
 	}
@@ -106,10 +109,10 @@ function getGearId(rowIndex, columnIndex) {
 	return `${rowIndex}_${columnIndex}`;
 }
 
-function mergeFlakeIndices(flakeIndices1, flakeIndices2) {
+function mergeFlakeIndices(flakeIndices1, flakeIndices2, addition) {
 	Object.keys(flakeIndices2).forEach((flakeKey) => {
 		const flakeCount = flakeIndices1[flakeKey];
-		flakeIndices1[flakeKey] = flakeCount ? flakeCount + flakeIndices2[flakeKey] : flakeIndices2[flakeKey];
+		flakeIndices1[flakeKey] = [...(flakeIndices1[flakeKey] || []), ...(flakeIndices2[flakeKey] || []), ...(addition ? [addition] : [])];
 	});
 	return flakeIndices1;
 }
