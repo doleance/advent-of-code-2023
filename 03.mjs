@@ -11,7 +11,6 @@ console.log(engineParts);
 
 function getEngineParts(lines) {
 	let gears = {};
-	let gearParts = {};
 	let enginePartNumberSum = 0;
 	lines.forEach((line, lineIndex) => {
 		let i = 0;
